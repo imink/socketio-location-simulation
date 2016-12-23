@@ -10,7 +10,8 @@ var secret = config.secret;
 
 
 var host = process.env.HOST || 'localhost';
-var port = process.env.PORT || '8080';
+// var port = process.env.PORT || '8080';
+var port = 8082;
 
 
 var server = restify.createServer({
@@ -31,8 +32,8 @@ function getNearest(drivers, userData) {
 		matchedSocketId = socketIds[0];
 	} else if (socketIds.length > 1) {
 		for (key in socketIds) {
-			var lat = drivers[socketIds[key]].latLong[0];
-			var lng = drivers[socketIds[key]].latLong[1];
+			var lat = drivers[socketIds[key]].latLng[0];
+			var lng = drivers[socketIds[key]].latLng[1];
 
 			distance = calDistance(userData.lat, userData.lng, lat, lng);
 			if (distance < minDistance) {
@@ -51,6 +52,7 @@ function getNearest(drivers, userData) {
 
 
 var drivers = {};
+var user = {};
 
 io.sockets
   .on('connection', socketioJwt.authorize({
@@ -60,28 +62,43 @@ io.sockets
   .on('authenticated', function(socket) {
     //this socket is authenticated, we are good to handle more events from it.
 		// console.log('connected & authenticated: ' + JSON.stringify(socket.decoded_token._doc._id));
-	  socket.on('init', function(data) {
-			if (data.isDriver) {
-				drivers[socket.id] = {
-					id: socket.id,
-					latLong: data.latLong
+	  // socket.on('init', function(data) {
+			// if (data.isDriver) {
+			// 	drivers[socket.id] = {
+			// 		id: socket.id,
+			// 		latLng: data.latLng
 
-				};
-				socket.isDriver = data.isDriver;
-				console.log("[Driver Added] at " + socket.id);
-				socket.broadcast.to('customers').emit('driverAdded', drivers[socket.id]);
+			// 	};
+			// 	socket.isDriver = data.isDriver;
+			// 	console.log("[Driver Added] at " + socket.id);
+			// 	socket.broadcast.to('customers').emit('driverAdded', drivers[socket.id]);
 
-			} else {
-				socket.join('customers');
-				console.log("[Customer Added] at " + socket.id);
+			// } else {
+			// 	socket.join('customers');
+			// 	console.log("[Customer Added] at " + socket.id);
 
-				var clients = io.sockets.adapter.rooms['customers'];
-				socket.emit('initDriverLoc', drivers); 
+			// 	var clients = io.sockets.adapter.rooms['customers'];
+			// 	socket.emit('initDriverLocList', drivers); 
+			// }
+  	// });
 
-				// the client is customers, send divers info to customers
-
-				// console.log(clients);
+  	socket.on('initUser', function(data) {
+  		socket.join('customers');
+			console.log("[Customer Added] at " + socket.id);
+			user[socket.id] = {
+				id:socket.id,
+				latLng: data.latLng
 			}
+			socket.broadcast.to('customers').emit('initDriverLocList', drivers); 
+  	});
+
+  	socket.on('initDriver', function(data) {
+  		drivers[socket.id] = {
+  			id: socket.id,
+  			latLng: data.latLng
+  		}
+			console.log("[Driver Added] at " + socket.id);
+			socket.broadcast.to('customers').emit('addDrivers', drivers[socket.id]);  		
   	});
 
 	  socket.on('book', function(customerData) {
@@ -98,25 +115,34 @@ io.sockets
 		});
 
 
-
-
-	  socket.on('locChanged', function(data) {
+	  socket.on('updateDriverLoc', function(data) {
 			drivers[socket.id] = {
 				id: socket.id,
-				latLong: data.latLong
+				latLng: data.latLng
 			}
-
-			socket.broadcast.emit('driverLocChanged', {
+			socket.broadcast.to('customers').emit('updateDriverLoc', {
 				id: socket.id,
-				latLong: data.latLong
+				latLng: data.latLng
 			})
 		});
+
+	  socket.on('updateUserLoc', function(data) {
+			// drivers[socket.id] = {
+			// 	id: socket.id,
+			// 	latLng: data.latLng
+			// }
+			// socket.broadcast.to('customers').emit('updateUserLoc', {
+			// 	id: socket.id,
+			// 	latLng: data.latLng
+			// })
+		});
+
 
 		socket.on('disconnect', function() {
 			if (socket.isDriver) {
 				delete drivers[socket.id];			
 				console.log("[Driver Disconnected] at: " + socket.id);
-				socket.broadcast.to('customers').emit('driverRemoved', drivers[socket.id]);
+				socket.broadcast.to('customers').emit('removeDrivers', drivers[socket.id]);
 			}
 			 else {
 				console.log("[Customer Disconnected] at: " + socket.id);

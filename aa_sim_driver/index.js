@@ -18,20 +18,19 @@ var nationalGallery = {lat: 51.508929, lng: -0.128299};
 
 var ucl = {lat: 51.524559, lng: -0.13404};
 
-var ioDriver = {};
+var ioUser = {};
 var ioDriverFlag = false;
 
-var ioUser = socketClient.connect("http://127.0.0.1:8082", {
+// force to connect a new connection even if the existing sockets hasn't closed
+var ioDriver = socketClient.connect("http://127.0.0.1:8082", {
 											'force new connection': true
 										});
  
-
-ioUser.on('connect', function () {
-  ioUser
+ioDriver.on('connect', function () {
+  ioDriver
     .emit('authenticate', {token: token}) //send the jwt
     .on('authenticated', function () {
       //do other things
-
     })
     .on('unauthorized', function(err) {
       console.log("unauthorized: " + JSON.stringify(err.data));
@@ -49,38 +48,34 @@ function randomFloat(low, high) {
 	return (Math.random() * (high - low) + low);
 }
 
-
-var clientMarker = {latLng: [nationalGallery.lat, nationalGallery.lng]};
-
-function initUser(){
-			ioUser.emit('initUser', clientMarker);
-
-}
-
-var clientMarkerUpdate = {latLng: [nationalGallery.lat + randomFloat(0.0, 0.2), ucl.lng + randomFloat(0.0, 0.2)]};
-
-function updateUserLoc() {
-	ioUser.emit('updateUserLoc', clientMarkerUpdate);
+function updateDriverLoc() {
+	ioDriver.emit('updateDriverLoc', {latLng: [ucl.lat + randomFloat(0.1, 0.2), ucl.lng + randomFloat(0.1, 0.2)]});
 }
 
 
-function book() {
-	ioUser.emit('book', clientMarker);
+var driverMarker = {"latLng": [ucl.lat, ucl.lng]};
+
+function initDriver(){
+	ioDriver.emit('initDriver', driverMarker);
 }
+
+var clientMarker = {"type":0,
+"lat": nationalGallery.lat,
+"lng": nationalGallery.lng};
 
 
 console.log('User: Now you can type: ');
 rl.on('line', function (cmd) {
-  if (cmd == "initUser") {
-  	initUser();
+  if (cmd == "initDriver") {
+  	initDriver();
   }
 
-  if (cmd == "book") {
-  	book();
-  }
+  // if (cmd == "book") {
+  // 	book();
+  // }
 
   if (cmd == "update") {
-  	loop = setInterval(updateUserLoc, 1000);
+  	loop = setInterval(updateDriverLoc, 1000);
   }
 
   if (cmd == "stop") {
@@ -88,44 +83,32 @@ rl.on('line', function (cmd) {
   }
 });
 
-ioUser.on('initDriverLocList', function(data) {
-	console.log('[RCV Drivers]:');
+
+// function crtFakeDrivers() {
+var driverNum = 3;
+
+
+// if (ioDriverFlag) {
+
+ioDriver.on('drivePath', function(data) {
+	console.log("[Drive Path]");
 	console.log(data);
 });
 
-ioUser.on('addDrivers', function(data) {
-	console.log('[ADD Drivers]:');
-	console.log(data);
-
-});
-
-ioUser.on('removeDrivers', function(data) {
-	console.log('[Drivers Moved]:');
+ioDriver.on('addUser', function(data) {
+	console.log("[Been Booked]");
 	console.log(data);
 });
 
-ioUser.on('updateDriverListLoc', function(data) {
-	console.log('[Drivers LocChanged]:');
+ioDriver.on('removeUser', function(data) {
+	console.log('[User Moved]:');
 	console.log(data);
 });
 
-ioUser.on('updateDriverLoc', function(data) {
-	console.log('[Target Driver LocChanged]:');
+ioDriver.on('updateUserLoc', function(data) {
+	console.log('[Upate UserLoc]:');
 	console.log(data);
 });
-
-ioUser.on('bookid', function(data) {
-	console.log('[BOOKED]');
-	if (data.id == 0) {
-		// not available, no cars available
-		console.log('no driver matched');
-	} else {
-			// book has been confirmed
-			console.log("your book has been confirmed.");
-			// then ETA, e.g. 5min on the way
-	}
-});
-
 
 
 
