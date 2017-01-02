@@ -24,7 +24,7 @@ var ioDriverNew = {};
 var groupLoop = "";
 var pairLoop = "";
 
-var ioDriver = socketClient.connect("http://127.0.0.1:8080/commonroom", {
+var ioDriver = socketClient.connect("http://alwaysaround.me:8081/commonroom", {
 											'force new connection': true
 										});
  
@@ -35,7 +35,7 @@ ioDriver.on('connect', function () {
     .emit('authenticate', {token: token}) //send the jwt
     .on('authenticated', function () {
       //do other things
-
+      console.log("dirver login");
     })
     .on('unauthorized', function(err) {
       console.log("unauthorized: " + JSON.stringify(err.data));
