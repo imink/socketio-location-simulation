@@ -24,10 +24,14 @@ var ioUserNew = {};
 var groupLoop = "";
 var pairLoop = "";
 
-var ioUser = ioClient.connect("http://127.0.0.1:8080/commonroom", {
+var ioUser = ioClient.connect("http://alwaysaround.me:8081/commonroom", {
 											'force new connection': true
 										});
  
+// var ioUser = ioClient.connect("http://127.0.0.1:8080/commonroom", {
+// 											'force new connection': true
+// 										});
+
 ioUser.on('connect', function () {
 	console.log('[User CommonRoom] Connected');
   ioUser
@@ -145,26 +149,26 @@ rl.on('line', function (cmd) {
 
 
 // group events
-// ioUser.on('initDriverLocList', function(data) {
-// 	console.log('[RCV Drivers]:');
-// 	console.log(data);
-// });
+ioUser.on('initDriverLocList', function(data) {
+	console.log('[RCV Drivers]:');
+	console.log(data);
+});
 
-// ioUser.on('addDrivers', function(data) {
-// 	console.log('[ADD Drivers]:');
-// 	console.log(data);
+ioUser.on('addDrivers', function(data) {
+	console.log('[ADD Drivers]:');
+	console.log(data);
 
-// });
+});
 
-// ioUser.on('removeDrivers', function(data) {
-// 	console.log('[Drivers Moved]:');
-// 	console.log(data);
-// });
+ioUser.on('removeDrivers', function(data) {
+	console.log('[Drivers Moved]:');
+	console.log(data);
+});
 
-// ioUser.on('updateDriverListLoc', function(data) {
-// 	console.log('[Drivers LocChanged]:');
-// 	console.log(data);
-// });
+ioUser.on('updateDriverListLoc', function(data) {
+	console.log('[Drivers LocChanged]:');
+	console.log(data);
+});
 
 
 

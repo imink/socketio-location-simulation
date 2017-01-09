@@ -28,6 +28,11 @@ var ioDriver = socketClient.connect("http://alwaysaround.me:8081/commonroom", {
 											'force new connection': true
 										});
  
+// var ioDriver = socketClient.connect("http://127.0.0.1:8080/commonroom", {
+// 											'force new connection': true
+// 										});
+
+
 
 ioDriver.on('connect', function () {
 	console.log('[Driver CommonRoom] Connected');
@@ -55,9 +60,8 @@ function forceDisconn() {
 }
 
 
-var driverMarkerUpdate = {latLng: [nationalGallery.lat + randomFloat(0.0, 0.2), ucl.lng + randomFloat(0.0, 0.2)]};
-
 function groupUpdate() {
+	var driverMarkerUpdate = {latLng: [nationalGallery.lat + randomFloat(0.0, 0.2), ucl.lng + randomFloat(0.0, 0.2)]};
 	ioDriver.emit('updateDriverListLoc', driverMarkerUpdate);
 }
 
